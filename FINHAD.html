@@ -1,0 +1,1919 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FINHAD — Financial Tracker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg: #F0F4F8;
+  --surface: #FFFFFF;
+  --surface2: #F8FAFC;
+  --border: rgba(0,0,0,0.07);
+  --border-strong: rgba(0,0,0,0.13);
+  --text: #0F172A;
+  --text-muted: #64748B;
+  --text-hint: #94A3B8;
+  --teal: #10B981;
+  --teal-dark: #059669;
+  --teal-light: #D1FAE5;
+  --teal-text: #065F46;
+  --red: #EF4444;
+  --red-dark: #DC2626;
+  --red-light: #FEE2E2;
+  --red-text: #7F1D1D;
+  --amber: #F59E0B;
+  --amber-light: #FEF3C7;
+  --blue: #3B82F6;
+  --blue-light: #DBEAFE;
+  --purple: #8B5CF6;
+  --indigo: #6366F1;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow: 0 4px 12px rgba(0,0,0,.08), 0 1px 3px rgba(0,0,0,.05);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,.1), 0 2px 6px rgba(0,0,0,.06);
+  --nav-h: 68px;
+  --sidebar-w: 240px;
+}
+
+/* Mengubah media query otomatis menjadi manual toggle menggunakan data-theme */
+[data-theme="dark"] {
+  --bg: #0F172A;
+  --surface: #1E293B;
+  --surface2: #1A2535;
+  --border: rgba(255,255,255,.07);
+  --border-strong: rgba(255,255,255,.12);
+  --text: #F1F5F9;
+  --text-muted: #94A3B8;
+  --text-hint: #64748B;
+  --teal-light: #064E3B;
+  --teal-text: #6EE7B7;
+  --red-light: #450A0A;
+  --red-text: #FCA5A5;
+  --amber-light: #451A03;
+  --blue-light: #1E3A5F;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.3);
+  --shadow: 0 4px 12px rgba(0,0,0,.4);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,.5);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ─── THEME TOGGLE BUTTON ───────────────────────── */
+.theme-toggle {
+  position: fixed;
+  top: 24px;
+  right: 36px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--text-muted);
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  z-index: 999;
+  transition: all .2s ease;
+}
+
+.theme-toggle:hover {
+  background: var(--bg);
+  color: var(--text);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.theme-toggle svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: all .3s ease;
+}
+
+/* ─── SIDEBAR (desktop) ─────────────────────────── */
+.sidebar {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: var(--sidebar-w);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+.brand {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.brand-icon {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, var(--teal), var(--indigo));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.brand-name {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  color: var(--text);
+}
+
+.brand-name span { color: var(--teal); }
+.brand-tagline { font-size: 11px; color: var(--text-hint); padding-left: 46px; }
+
+.nav { padding: 12px 12px; flex: 1; overflow-y: auto; }
+
+.nav-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-hint);
+  padding: 12px 10px 6px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 2px;
+  transition: all .15s ease;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  position: relative;
+}
+
+.nav-item svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: .7;
+}
+
+.nav-item:hover { background: var(--bg); color: var(--text); }
+.nav-item:hover svg { opacity: 1; }
+
+.nav-item.active {
+  background: var(--teal-light);
+  color: var(--teal-dark);
+  font-weight: 600;
+}
+
+[data-theme="dark"] .nav-item.active { color: var(--teal-text); }
+
+.nav-item.active svg { stroke: var(--teal); opacity: 1; }
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 25%; bottom: 25%;
+  width: 3px;
+  background: var(--teal);
+  border-radius: 0 2px 2px 0;
+}
+
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.sidebar-date-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text-hint); margin-bottom: 2px; }
+.sidebar-date-val { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+.sidebar-npm { font-size: 11px; color: var(--text-hint); margin-top: 4px; }
+
+/* ─── MAIN CONTENT ──────────────────────────────── */
+.main {
+  margin-left: var(--sidebar-w);
+  padding: 32px 36px;
+  min-height: 100vh;
+}
+
+/* ─── BOTTOM NAV (mobile only) ──────────────────── */
+.bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: var(--nav-h);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  z-index: 200;
+  padding: 0 8px;
+  align-items: center;
+  justify-content: space-around;
+  box-shadow: 0 -4px 16px rgba(0,0,0,.08);
+}
+
+.bnav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 500;
+  transition: all .15s;
+  flex: 1;
+  max-width: 72px;
+}
+
+.bnav-item svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bnav-item.active { color: var(--teal); }
+.bnav-item.active svg { stroke: var(--teal); }
+
+.bnav-add {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg, var(--teal), var(--teal-dark)) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(16,185,129,.4) !important;
+  padding: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 48px !important;
+  max-width: 48px !important;
+  font-size: 0 !important;
+  margin-bottom: 8px;
+}
+
+.bnav-add svg { width: 22px; height: 22px; }
+
+/* ─── PAGE HEADER ───────────────────────────────── */
+.page { display: none; }
+.page.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  padding-right: 50px; /* Spacer for the theme button */
+}
+
+.page-title-group {}
+.page-eyebrow { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); margin-bottom: 4px; }
+.page-title { font-size: 26px; font-weight: 800; letter-spacing: -.04em; line-height: 1.1; }
+.page-sub { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+
+/* ─── KPI GRID ──────────────────────────────────── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.kpi {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+.kpi::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 4px;
+  height: 100%;
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.kpi.kpi-green::after { background: var(--teal); }
+.kpi.kpi-red::after { background: var(--red); }
+.kpi.kpi-blue::after { background: var(--blue); }
+.kpi.kpi-neutral::after { background: var(--text-hint); }
+
+.kpi-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+
+.kpi-icon-green { background: var(--teal-light); }
+.kpi-icon-red { background: var(--red-light); }
+.kpi-icon-blue { background: var(--blue-light); }
+.kpi-icon-neutral { background: var(--border); }
+
+.kpi-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+.kpi-val { font-size: 22px; font-weight: 800; letter-spacing: -.04em; line-height: 1; }
+.kpi-sub { font-size: 11px; color: var(--text-hint); margin-top: 6px; }
+.kpi-val.green { color: var(--teal-dark); }
+.kpi-val.red { color: var(--red-dark); }
+.kpi-val.blue { color: var(--blue); }
+
+/* ─── CARDS ─────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  box-shadow: var(--shadow-sm);
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -.01em;
+}
+
+.card-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: var(--bg);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+/* ─── LAYOUT GRIDS ──────────────────────────────── */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px; }
+.grid3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; margin-bottom: 20px; }
+.grid-65-35 { display: grid; grid-template-columns: 65fr 35fr; gap: 18px; margin-bottom: 20px; }
+.mb16 { margin-bottom: 16px; }
+.mb20 { margin-bottom: 20px; }
+.gap-col { display: flex; flex-direction: column; gap: 16px; }
+
+/* ─── WALLET LIST ───────────────────────────────── */
+.wallet-list { display: flex; flex-direction: column; gap: 0; }
+
+.wallet-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.wallet-row:last-child { border-bottom: none; }
+
+.wallet-info { display: flex; align-items: center; gap: 12px; }
+
+.wallet-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+  color: #fff;
+  letter-spacing: -.02em;
+}
+
+.wallet-name { font-size: 14px; font-weight: 600; }
+.wallet-sub { font-size: 11px; color: var(--text-hint); margin-top: 1px; }
+.wallet-saldo { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ─── TRANSACTION TABLE ─────────────────────────── */
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-select, .filter-input {
+  font-size: 13px;
+  font-family: inherit;
+  padding: 8px 12px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  height: 36px;
+  outline: none;
+  transition: border-color .15s, background-color 0.3s;
+}
+
+.filter-select:focus, .filter-input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(16,185,129,.1); }
+.filter-input { min-width: 180px; }
+.filter-input::placeholder { color: var(--text-hint); }
+
+.table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+table { width: 100%; border-collapse: collapse; background: var(--surface); transition: background-color 0.3s; }
+
+thead tr { background: var(--surface2); }
+
+th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  vertical-align: middle;
+}
+
+tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--bg); transition: background .1s; }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; }
+.badge-exp { background: var(--red-light); color: var(--red-dark); }
+.badge-exp::before { background: var(--red); }
+.badge-inc { background: var(--teal-light); color: var(--teal-text); }
+.badge-inc::before { background: var(--teal); }
+
+.tx-summary {
+  padding: 10px 16px;
+  font-size: 12px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  background: var(--surface2);
+  border-radius: 0 0 var(--radius) var(--radius);
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* ─── BUDGET BARS ───────────────────────────────── */
+.budget-item {
+  display: grid;
+  grid-template-columns: 140px 1fr 44px 52px;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.budget-item:last-child { margin-bottom: 0; }
+
+.budget-label { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.bar-track {
+  height: 8px;
+  background: var(--bg);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.bar-fill { height: 100%; border-radius: 8px; transition: width .5s cubic-bezier(.4,0,.2,1); }
+
+.budget-pct { font-size: 12px; color: var(--text-muted); text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.budget-status { font-size: 11px; font-weight: 700; text-align: center; padding: 2px 8px; border-radius: 20px; }
+.s-ok { background: var(--teal-light); color: var(--teal-text); }
+.s-warn { background: var(--amber-light); color: #92400E; }
+.s-over { background: var(--red-light); color: var(--red-text); }
+
+/* ─── SUMMARY ROWS ──────────────────────────────── */
+.sum-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.sum-row:last-child { border-bottom: none; font-weight: 700; }
+.sum-label { color: var(--text-muted); }
+
+/* ─── INPUT FORM ────────────────────────────────── */
+.mini-kpi { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 20px; }
+
+.mini-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.mini-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-hint); margin-bottom: 5px; }
+.mini-val { font-size: 20px; font-weight: 800; letter-spacing: -.03em; }
+.mini-val.green { color: var(--teal-dark); }
+.mini-val.red { color: var(--red-dark); }
+
+.form-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 20px;
+}
+
+.form-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.form-header-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--teal-light);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+}
+
+.form-header-title { font-size: 15px; font-weight: 700; }
+.form-header-sub { font-size: 12px; color: var(--text-muted); }
+
+.jenis-selector { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+
+.jenis-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 12px 8px;
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: all .15s;
+}
+
+.jenis-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.jenis-btn:hover { border-color: var(--text-hint); color: var(--text); }
+.jenis-btn.active-exp { border-color: var(--red); background: var(--red-light); color: var(--red-dark); }
+.jenis-btn.active-inc { border-color: var(--teal); background: var(--teal-light); color: var(--teal-text); }
+.jenis-btn.active-tf { border-color: var(--amber); background: var(--amber-light); color: #92400E; }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.form-grid.g3 { grid-template-columns: 1fr 1fr 1fr; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group.full { grid-column: 1/-1; }
+
+.form-label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
+
+.form-control {
+  font-size: 14px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  width: 100%;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s, background-color 0.3s;
+}
+
+.form-control:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(16,185,129,.12);
+}
+
+.form-control::placeholder { color: var(--text-hint); }
+
+.transfer-alert {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--amber-light);
+  border: 1px solid var(--amber);
+  border-radius: var(--radius-sm);
+  color: #92400E;
+  font-size: 12px;
+  margin-top: 4px;
+  margin-bottom: 14px;
+}
+
+.transfer-alert.show { display: flex; }
+
+.btn-submit {
+  width: 100%;
+  padding: 13px;
+  background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  margin-top: 16px;
+  letter-spacing: .01em;
+  box-shadow: 0 4px 12px rgba(16,185,129,.3);
+  transition: all .15s;
+}
+
+.btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(16,185,129,.4); }
+.btn-submit:active { transform: translateY(0); }
+
+/* ─── TODAY LIST ────────────────────────────────── */
+.today-empty {
+  text-align: center;
+  padding: 36px;
+  color: var(--text-hint);
+}
+
+.today-empty-icon { font-size: 32px; margin-bottom: 8px; }
+.today-empty-text { font-size: 13px; }
+
+.today-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+
+.today-item:last-child { border-bottom: none; }
+
+.today-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+
+.today-type-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+
+.today-merchant { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.today-meta { font-size: 11px; color: var(--text-hint); margin-top: 2px; }
+
+.today-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.today-nominal { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.today-nominal.exp { color: var(--red-dark); }
+.today-nominal.inc { color: var(--teal-dark); }
+
+.btn-del {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-hint);
+  padding: 6px;
+  border-radius: var(--radius-xs);
+  line-height: 1;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+}
+
+.btn-del:hover { color: var(--red); background: var(--red-light); }
+.btn-del svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+
+/* ─── EXPORT BUTTON ─────────────────────────────── */
+.btn-outline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  background: none;
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+}
+
+.btn-outline:hover { background: var(--bg); border-color: var(--teal); color: var(--teal-dark); }
+.btn-outline svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ─── MONTH TABS ────────────────────────────────── */
+.month-tabs { display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; }
+
+.month-tab {
+  padding: 6px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 20px;
+  background: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-family: inherit;
+  transition: all .15s;
+}
+
+.month-tab.active { background: var(--teal); color: #fff; border-color: var(--teal); box-shadow: 0 2px 8px rgba(16,185,129,.3); }
+.month-tab:hover:not(.active) { background: var(--bg); color: var(--text); }
+
+/* ─── CHARTS ─────────────────────────────────────── */
+.chart-wrap { position: relative; width: 100%; }
+
+/* ─── INDICATORS ─────────────────────────────────── */
+.indikator-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.indikator-row:last-child { border-bottom: none; }
+.indikator-label { color: var(--text-muted); font-weight: 500; }
+.indikator-note { font-size: 11px; color: var(--text-hint); margin-top: 2px; }
+.indikator-val { font-weight: 700; font-size: 14px; }
+
+/* ─── TOAST ──────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(70px);
+  background: var(--text);
+  color: var(--bg);
+  padding: 11px 24px;
+  border-radius: 24px;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0;
+  transition: all .25s cubic-bezier(.34,1.56,.64,1);
+  pointer-events: none;
+  z-index: 9999;
+  white-space: nowrap;
+  box-shadow: var(--shadow-lg);
+}
+
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ─── RESPONSIVE ─────────────────────────────────── */
+@media (max-width: 960px) {
+  .sidebar { width: 72px; }
+  .nav-item span, .brand-name, .brand-tagline, .sidebar-date-label, .sidebar-date-val, .sidebar-npm { display: none; }
+  .brand-logo { justify-content: center; }
+  .brand { padding: 16px; }
+  .nav-item { justify-content: center; padding: 12px; }
+  .nav-item::before { display: none; }
+  .nav-item.active { background: var(--teal-light); border-radius: var(--radius-sm); }
+  .main { margin-left: 72px; padding: 24px 20px; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .grid2, .grid3, .grid-65-35 { grid-template-columns: 1fr; }
+  .sidebar-footer { display: none; }
+  .theme-toggle { right: 20px; }
+}
+
+@media (max-width: 640px) {
+  .sidebar { display: none; }
+  .bottom-nav { display: flex; }
+  .main { margin-left: 0; padding: 20px 16px; padding-bottom: calc(var(--nav-h) + 20px); }
+  .kpi-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .form-grid, .form-grid.g3 { grid-template-columns: 1fr; }
+  .form-group.full { grid-column: 1; }
+  .mini-kpi { grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .budget-item { grid-template-columns: 100px 1fr 36px 44px; gap: 8px; }
+  .page-title { font-size: 22px; }
+  .theme-toggle { top: 16px; right: 16px; width: 38px; height: 38px; }
+  .theme-toggle svg { width: 18px; height: 18px; }
+  .page-header { padding-right: 40px; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOMBOL TOGGLE THEME -->
+<button class="theme-toggle" id="btnTheme" onclick="toggleTheme()" title="Ganti Mode Terang/Gelap">
+  <svg id="themeIcon" viewBox="0 0 24 24"></svg>
+</button>
+
+<!-- SIDEBAR (desktop/tablet) -->
+<nav class="sidebar">
+  <div class="brand">
+    <div class="brand-logo">
+      <div class="brand-icon">💰</div>
+      <div class="brand-name">FIN<span>HAD</span></div>
+    </div>
+    <div class="brand-tagline">otw financial freedom 🎯</div>
+  </div>
+
+  <div class="nav">
+    <div class="nav-section-label">Menu</div>
+    <button class="nav-item active" onclick="goPage('dashboard')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      <span>Dashboard</span>
+    </button>
+    <button class="nav-item" onclick="goPage('input')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      <span>Input Transaksi</span>
+    </button>
+    <button class="nav-item" onclick="goPage('transaksi')">
+      <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+      <span>Riwayat</span>
+    </button>
+    <button class="nav-item" onclick="goPage('budgeting')">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      <span>Budgeting</span>
+    </button>
+    <button class="nav-item" onclick="goPage('grafik')">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span>Grafik</span>
+    </button>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-date-label">Tanggal</div>
+    <div class="sidebar-date-val" id="sidebarDate"></div>
+    <div class="sidebar-npm">NPM 20223753 · Haddy</div>
+  </div>
+</nav>
+
+<!-- BOTTOM NAV (mobile) -->
+<nav class="bottom-nav">
+  <button class="bnav-item active" onclick="goPage('dashboard')">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    Beranda
+  </button>
+  <button class="bnav-item" onclick="goPage('transaksi')">
+    <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+    Riwayat
+  </button>
+  <button class="bnav-item bnav-add" onclick="goPage('input')">
+    <svg viewBox="0 0 24 24" style="stroke:#fff"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+  <button class="bnav-item" onclick="goPage('budgeting')">
+    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg>
+    Budget
+  </button>
+  <button class="bnav-item" onclick="goPage('grafik')">
+    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Grafik
+  </button>
+</nav>
+
+<main class="main">
+
+<!-- ═══════════════════ DASHBOARD ═══════════════════ -->
+<div id="page-dashboard" class="page active">
+  <div class="page-header">
+    <div class="page-title-group">
+      <div class="page-eyebrow">Overview</div>
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Ringkasan keuangan — Juni 2026</div>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi kpi-neutral">
+      <div class="kpi-icon kpi-icon-neutral">💼</div>
+      <div class="kpi-label">Total Saldo</div>
+      <div class="kpi-val">Rp 215.230</div>
+      <div class="kpi-sub">5 wallet aktif</div>
+    </div>
+    <div class="kpi kpi-green">
+      <div class="kpi-icon kpi-icon-green">📥</div>
+      <div class="kpi-label">Pemasukan MTD</div>
+      <div class="kpi-val green">Rp 292rb</div>
+      <div class="kpi-sub">bulan ini</div>
+    </div>
+    <div class="kpi kpi-red">
+      <div class="kpi-icon kpi-icon-red">📤</div>
+      <div class="kpi-label">Pengeluaran MTD</div>
+      <div class="kpi-val">Rp 1,49jt</div>
+      <div class="kpi-sub">13 hari berjalan</div>
+    </div>
+    <div class="kpi kpi-red">
+      <div class="kpi-icon kpi-icon-red">📊</div>
+      <div class="kpi-label">Net Cash Flow</div>
+      <div class="kpi-val red">-Rp 1,19jt</div>
+      <div class="kpi-sub">Jun 2026</div>
+    </div>
+  </div>
+
+  <div class="grid-65-35">
+    <!-- Recent transactions -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">10 Transaksi Terakhir</div>
+        <button class="card-badge" onclick="goPage('transaksi')" style="cursor:pointer;border:none;background:var(--bg)">Lihat semua →</button>
+      </div>
+      <div class="table-wrap" style="border:none;border-radius:0;box-shadow:none;margin:-2px -4px">
+        <table>
+          <thead><tr>
+            <th>Tanggal</th><th>Merchant</th><th>Kategori</th><th>Wallet</th><th style="text-align:right">Nominal</th>
+          </tr></thead>
+          <tbody id="last10Body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Right column -->
+    <div class="gap-col">
+      <!-- Wallet list -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Saldo Wallet</div>
+          <div class="card-badge">5 aktif</div>
+        </div>
+        <div class="wallet-list">
+          <div class="wallet-row">
+            <div class="wallet-info">
+              <div class="wallet-avatar" style="background:#1D9E75">Ca</div>
+              <div><div class="wallet-name">Cash</div><div class="wallet-sub">+1,35jt · -1,29jt</div></div>
+            </div>
+            <div class="wallet-saldo">Rp 3.000</div>
+          </div>
+          <div class="wallet-row">
+            <div class="wallet-info">
+              <div class="wallet-avatar" style="background:#3B82F6">Bl</div>
+              <div><div class="wallet-name">Blu</div><div class="wallet-sub">+438rb · -2,30jt</div></div>
+            </div>
+            <div class="wallet-saldo">Rp 151.057</div>
+          </div>
+          <div class="wallet-row">
+            <div class="wallet-info">
+              <div class="wallet-avatar" style="background:#8B5CF6">DK</div>
+              <div><div class="wallet-name">DKI</div><div class="wallet-sub">+1,61jt · -108rb</div></div>
+            </div>
+            <div class="wallet-saldo">Rp 53.979</div>
+          </div>
+          <div class="wallet-row">
+            <div class="wallet-info">
+              <div class="wallet-avatar" style="background:#EF9F27">GP</div>
+              <div><div class="wallet-name">GoPay</div><div class="wallet-sub">+383 · -33rb</div></div>
+            </div>
+            <div class="wallet-saldo">Rp 7.194</div>
+          </div>
+          <div class="wallet-row">
+            <div class="wallet-info">
+              <div class="wallet-avatar" style="background:#94A3B8">Ja</div>
+              <div><div class="wallet-name">Jago</div><div class="wallet-sub">Kosong</div></div>
+            </div>
+            <div class="wallet-saldo" style="color:var(--text-hint)">Rp 0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financial indicators -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Indikator Finansial</div>
+        </div>
+        <div class="indikator-row">
+          <div><div class="indikator-label">Saving Rate</div><div class="indikator-note">Target &gt; 20%</div></div>
+          <div class="indikator-val" style="color:var(--red-dark)">-408.6%</div>
+        </div>
+        <div class="indikator-row">
+          <div><div class="indikator-label">Rasio Keluar/Masuk</div><div class="indikator-note">Ideal &lt; 80%</div></div>
+          <div class="indikator-val" style="color:var(--red-dark)">508.6%</div>
+        </div>
+        <div class="indikator-row">
+          <div><div class="indikator-label">Kategori Terbesar</div></div>
+          <div class="indikator-val">Transport</div>
+        </div>
+        <div class="indikator-row">
+          <div><div class="indikator-label">Hari Berjalan</div></div>
+          <div class="indikator-val">13 / 30</div>
+        </div>
+        <div class="indikator-row">
+          <div><div class="indikator-label">Total Transaksi</div></div>
+          <div class="indikator-val" id="dashTxCount">176</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ INPUT TRANSAKSI ════════════ -->
+<div id="page-input" class="page">
+  <div class="page-header">
+    <div class="page-title-group">
+      <div class="page-eyebrow">Catat</div>
+      <div class="page-title">Input Transaksi</div>
+      <div class="page-sub">Tambah pemasukan, pengeluaran, atau transfer</div>
+    </div>
+  </div>
+
+  <div class="mini-kpi" id="miniKpi">
+    <div class="mini-card">
+      <div class="mini-label">Masuk hari ini</div>
+      <div class="mini-val green" id="todayInc">Rp 0</div>
+    </div>
+    <div class="mini-card">
+      <div class="mini-label">Keluar hari ini</div>
+      <div class="mini-val red" id="todayExp">Rp 0</div>
+    </div>
+    <div class="mini-card">
+      <div class="mini-label">Net hari ini</div>
+      <div class="mini-val" id="todayNet">Rp 0</div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-header">
+      <div class="form-header-icon">✏️</div>
+      <div>
+        <div class="form-header-title">Detail Transaksi</div>
+        <div class="form-header-sub">Isi semua kolom yang diperlukan</div>
+      </div>
+    </div>
+
+    <!-- Jenis selector -->
+    <div class="jenis-selector">
+      <button class="jenis-btn active-exp" id="btnExp" onclick="setJenis('Expense')">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+        Expense
+      </button>
+      <button class="jenis-btn" id="btnInc" onclick="setJenis('Income')">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+        Income
+      </button>
+      <button class="jenis-btn" id="btnTf" onclick="setJenis('Transfer')">
+        <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+        Transfer
+      </button>
+    </div>
+
+    <div class="form-grid mb16">
+      <div class="form-group">
+        <label class="form-label">Tanggal</label>
+        <input type="date" class="form-control" id="fTgl">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nominal (IDR)</label>
+        <input type="number" class="form-control" id="fNominal" placeholder="0" min="0" step="500">
+      </div>
+    </div>
+
+    <div class="form-group full mb16">
+      <label class="form-label">Merchant / Nama</label>
+      <input type="text" class="form-control" id="fMerchant" placeholder="Nasi Padang, Bensin, Gaji AsLab...">
+    </div>
+
+    <div class="form-grid g3 mb16">
+      <div class="form-group">
+        <label class="form-label">Kategori</label>
+        <select class="form-control" id="fKat"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Dari Wallet</label>
+        <select class="form-control" id="fWallet">
+          <option>Cash</option><option>Blu</option><option>DKI</option><option>GoPay</option><option>Jago</option>
+        </select>
+      </div>
+      <div class="form-group" id="walletToWrap" style="display:none">
+        <label class="form-label">Ke Wallet</label>
+        <select class="form-control" id="fWalletTo">
+          <option>Blu</option><option>Cash</option><option>DKI</option><option>GoPay</option><option>Jago</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="transfer-alert" id="transferNote">
+      ⚠️ Transfer dicatat 2 baris: Expense dari wallet asal + Income ke wallet tujuan.
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Keterangan <span style="font-weight:400;color:var(--text-hint);text-transform:none;letter-spacing:0">(opsional)</span></label>
+      <input type="text" class="form-control" id="fKet" placeholder="Catatan tambahan...">
+    </div>
+
+    <button class="btn-submit" onclick="tambahTx()">+ Tambah Transaksi</button>
+  </div>
+
+  <!-- Today's transactions -->
+  <div class="card mb16">
+    <div class="card-header">
+      <div class="card-title">Transaksi Hari Ini</div>
+      <div class="card-badge" id="todayCount">0 transaksi</div>
+    </div>
+    <div id="todayList">
+      <div class="today-empty">
+        <div class="today-empty-icon">📋</div>
+        <div class="today-empty-text">Belum ada transaksi hari ini.<br>Tambah di atas!</div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-outline" onclick="exportTx()">
+    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Export ke TSV (paste ke Excel)
+  </button>
+</div>
+
+<!-- ═══════════════════ RIWAYAT TRANSAKSI ══════════ -->
+<div id="page-transaksi" class="page">
+  <div class="page-header">
+    <div class="page-title-group">
+      <div class="page-eyebrow">Laporan</div>
+      <div class="page-title">Riwayat Transaksi</div>
+      <div class="page-sub">Seluruh transaksi tercatat</div>
+    </div>
+  </div>
+
+  <div class="card mb20">
+    <div class="card-header">
+      <div class="card-title">Filter</div>
+    </div>
+    <div class="filter-bar">
+      <select class="filter-select" id="filterBulan" onchange="renderTx()">
+        <option value="">Semua Bulan</option>
+        <option value="2026-04">April 2026</option>
+        <option value="2026-05">Mei 2026</option>
+        <option value="2026-06" selected>Juni 2026</option>
+      </select>
+      <select class="filter-select" id="filterJenis" onchange="renderTx()">
+        <option value="">Semua Jenis</option>
+        <option value="Expense">Expense</option>
+        <option value="Income">Income</option>
+        <option value="Transfer">Transfer</option>
+      </select>
+      <select class="filter-select" id="filterWallet" onchange="renderTx()">
+        <option value="">Semua Wallet</option>
+        <option>Cash</option><option>Blu</option><option>DKI</option><option>GoPay</option>
+      </select>
+      <select class="filter-select" id="filterKat" onchange="renderTx()"><option value="">Semua Kategori</option></select>
+      <input type="text" class="filter-input" id="filterSearch" placeholder="🔍 Cari merchant..." oninput="renderTx()">
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Tgl</th>
+        <th>Merchant</th>
+        <th>Kategori</th>
+        <th>Wallet</th>
+        <th>Jenis</th>
+        <th style="text-align:right">Nominal</th>
+      </tr></thead>
+      <tbody id="txBody"></tbody>
+    </table>
+    <div class="tx-summary" id="txSummary"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ BUDGETING ══════════════════ -->
+<div id="page-budgeting" class="page">
+  <div class="page-header">
+    <div class="page-title-group">
+      <div class="page-eyebrow">Anggaran</div>
+      <div class="page-title">Budgeting</div>
+      <div class="page-sub">Pantau realisasi anggaran bulanan</div>
+    </div>
+  </div>
+
+  <div class="month-tabs">
+    <button class="month-tab" onclick="setBudgetMonth('')">Semua</button>
+    <button class="month-tab" onclick="setBudgetMonth('2026-04')">Apr 2026</button>
+    <button class="month-tab" onclick="setBudgetMonth('2026-05')">Mei 2026</button>
+    <button class="month-tab active" onclick="setBudgetMonth('2026-06')">Jun 2026</button>
+  </div>
+
+  <div class="grid-65-35">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Status Anggaran per Kategori</div>
+      </div>
+      <div id="budgetRows"></div>
+    </div>
+    <div class="gap-col">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Ringkasan</div></div>
+        <div id="budgetSummary"></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Pengeluaran per Wallet</div></div>
+        <div id="walletSummary"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ GRAFIK ═════════════════════ -->
+<div id="page-grafik" class="page">
+  <div class="page-header">
+    <div class="page-title-group">
+      <div class="page-eyebrow">Analisis</div>
+      <div class="page-title">Grafik</div>
+      <div class="page-sub">Visualisasi data keuangan</div>
+    </div>
+  </div>
+
+  <div class="grid2 mb20">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Pengeluaran per Kategori (Jun 2026)</div></div>
+      <div class="chart-wrap" style="height:260px"><canvas id="chartKat"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Komposisi Wallet</div></div>
+      <div class="chart-wrap" style="height:260px"><canvas id="chartDoughnut"></canvas></div>
+    </div>
+  </div>
+  <div class="card mb20">
+    <div class="card-header"><div class="card-title">Tren Bulanan — Pemasukan vs Pengeluaran</div></div>
+    <div class="chart-wrap" style="height:220px"><canvas id="chartBulan"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">Net Cash Flow YTD</div></div>
+    <div class="chart-wrap" style="height:200px"><canvas id="chartYtd"></canvas></div>
+  </div>
+</div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── THEME MANAGER ─────────────────────────────────────────────────────────────
+function initTheme() {
+  const saved = localStorage.getItem('finhad_theme');
+  const isDark = saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  setTheme(isDark);
+}
+
+function toggleTheme() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  setTheme(!isDark);
+  if(document.getElementById('page-grafik').classList.contains('active')) {
+    renderCharts();
+  }
+}
+
+function setTheme(isDark) {
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  localStorage.setItem('finhad_theme', isDark ? 'dark' : 'light');
+  
+  const svg = document.getElementById('themeIcon');
+  if(isDark) {
+    // Icon Matahari (Untuk pindah ke Terang)
+    svg.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  } else {
+    // Icon Bulan (Untuk pindah ke Gelap)
+    svg.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+  }
+
+  // Update default Chart.js color sesuai tema
+  Chart.defaults.color = isDark ? '#94A3B8' : '#64748B';
+  Chart.defaults.borderColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
+}
+
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const TX_BASE = [
+{no:1,tgl:"2026-04-22",merchant:"Parkir",kategori:"Parkir",wallet:"Cash",jenis:"Expense",nominal:1000,ket:""},
+{no:2,tgl:"2026-04-22",merchant:"Bensin",kategori:"Bensin",wallet:"Cash",jenis:"Expense",nominal:31000,ket:""},
+{no:3,tgl:"2026-04-22",merchant:"Nasi Padang",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:10000,ket:""},
+{no:4,tgl:"2026-04-22",merchant:"Shampoo + Body Wash + Sikat Gigi",kategori:"Personal Care",wallet:"Blu",jenis:"Expense",nominal:60450,ket:""},
+{no:5,tgl:"2026-04-23",merchant:"Ongkos Kuliah",kategori:"Allowance",wallet:"Cash",jenis:"Income",nominal:38000,ket:""},
+{no:6,tgl:"2026-04-23",merchant:"Nasi Padang",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:10000,ket:""},
+{no:7,tgl:"2026-04-23",merchant:"Kuota 150 GB Tri",kategori:"Bills & Utilities",wallet:"Blu",jenis:"Expense",nominal:150000,ket:""},
+{no:8,tgl:"2026-04-24",merchant:"Kuota 150 GB Tri",kategori:"Reimburse",wallet:"Cash",jenis:"Income",nominal:150000,ket:""},
+{no:9,tgl:"2026-04-24",merchant:"Ongkos Kuliah",kategori:"Allowance",wallet:"Cash",jenis:"Income",nominal:40000,ket:""},
+{no:10,tgl:"2026-04-24",merchant:"Nasi Padang",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:16000,ket:""},
+{no:11,tgl:"2026-04-24",merchant:"Gaji AsLab Madas",kategori:"Salary",wallet:"DKI",jenis:"Income",nominal:909460,ket:""},
+{no:12,tgl:"2026-04-24",merchant:"Nasi Goreng",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:17000,ket:""},
+{no:13,tgl:"2026-04-25",merchant:"Cash to Blu",kategori:"Transfer",wallet:"Cash",jenis:"Expense",nominal:200000,ket:""},
+{no:14,tgl:"2026-04-25",merchant:"Cash to Blu",kategori:"Transfer",wallet:"Blu",jenis:"Income",nominal:200000,ket:""},
+{no:15,tgl:"2026-04-25",merchant:"Cicil Sepatu Converse 500k",kategori:"Shopping",wallet:"Cash",jenis:"Expense",nominal:50000,ket:""},
+{no:16,tgl:"2026-04-26",merchant:"Selisih",kategori:"Lainnya",wallet:"Cash",jenis:"Expense",nominal:500,ket:""},
+{no:17,tgl:"2026-04-26",merchant:"Tambahan 2k",kategori:"Lainnya",wallet:"Cash",jenis:"Income",nominal:2000,ket:""},
+{no:18,tgl:"2026-04-27",merchant:"Bensin",kategori:"Bensin",wallet:"Cash",jenis:"Income",nominal:25000,ket:""},
+{no:19,tgl:"2026-04-27",merchant:"Bensin",kategori:"Bensin",wallet:"Cash",jenis:"Expense",nominal:31000,ket:""},
+{no:20,tgl:"2026-04-27",merchant:"Print + Folio 5k",kategori:"Education",wallet:"Cash",jenis:"Expense",nominal:7000,ket:""},
+{no:21,tgl:"2026-04-29",merchant:"Shampoo + Pasta Gigi",kategori:"Personal Care",wallet:"Blu",jenis:"Expense",nominal:31800,ket:""},
+{no:22,tgl:"2026-04-29",merchant:"Reimburse Shampoo + Pasta Gigi",kategori:"Personal Care",wallet:"Blu",jenis:"Income",nominal:31800,ket:""},
+{no:23,tgl:"2026-04-30",merchant:"Ongkos Kuliah",kategori:"Allowance",wallet:"Cash",jenis:"Income",nominal:35000,ket:""},
+{no:24,tgl:"2026-04-30",merchant:"Cash to Blu",kategori:"Transfer",wallet:"Cash",jenis:"Expense",nominal:50000,ket:""},
+{no:25,tgl:"2026-04-30",merchant:"Cash to Blu",kategori:"Transfer",wallet:"Blu",jenis:"Income",nominal:50000,ket:""},
+{no:26,tgl:"2026-04-30",merchant:"Isi Angin Ban Motor",kategori:"Transport",wallet:"Cash",jenis:"Expense",nominal:2000,ket:""},
+{no:27,tgl:"2026-04-30",merchant:"Nasi Padang",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:10000,ket:""},
+{no:28,tgl:"2026-05-02",merchant:"Ongkos Kuliah",kategori:"Allowance",wallet:"Cash",jenis:"Income",nominal:40000,ket:""},
+{no:29,tgl:"2026-05-02",merchant:"Parkir",kategori:"Parkir",wallet:"Cash",jenis:"Expense",nominal:2000,ket:""},
+{no:30,tgl:"2026-05-02",merchant:"Mie Ayam Bakso",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:20000,ket:""},
+{no:31,tgl:"2026-05-02",merchant:"Selisih",kategori:"Lainnya",wallet:"Cash",jenis:"Expense",nominal:1000,ket:""},
+{no:32,tgl:"2026-05-02",merchant:"DKI to Blu",kategori:"Transfer",wallet:"DKI",jenis:"Expense",nominal:900000,ket:""},
+{no:33,tgl:"2026-05-02",merchant:"DKI to Blu",kategori:"Transfer",wallet:"Blu",jenis:"Income",nominal:900000,ket:""},
+{no:34,tgl:"2026-05-02",merchant:"Admin Flip",kategori:"Admin Fee",wallet:"DKI",jenis:"Expense",nominal:325,ket:""},
+{no:35,tgl:"2026-05-03",merchant:"Storage Box Baju",kategori:"Household",wallet:"Blu",jenis:"Expense",nominal:27600,ket:""},
+{no:36,tgl:"2026-05-03",merchant:"Bensin",kategori:"Bensin",wallet:"Cash",jenis:"Expense",nominal:33000,ket:""},
+{no:37,tgl:"2026-05-04",merchant:"Ongkos Kuliah",kategori:"Allowance",wallet:"Cash",jenis:"Income",nominal:40000,ket:""},
+{no:38,tgl:"2026-05-04",merchant:"Parkir",kategori:"Parkir",wallet:"Cash",jenis:"Expense",nominal:2000,ket:""},
+{no:39,tgl:"2026-05-04",merchant:"Mie Ayam Bakso",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:15000,ket:""},
+{no:40,tgl:"2026-05-05",merchant:"Ongkos Kuliah",kategori:"Allowance",wallet:"Cash",jenis:"Income",nominal:40000,ket:""},
+{no:41,tgl:"2026-05-05",merchant:"Roti",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:10000,ket:""},
+{no:42,tgl:"2026-05-05",merchant:"Nii Choco Hazeltea",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:8400,ket:""},
+{no:43,tgl:"2026-05-05",merchant:"Parkir",kategori:"Parkir",wallet:"Cash",jenis:"Expense",nominal:2000,ket:""},
+{no:44,tgl:"2026-05-05",merchant:"Bakso Urat",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:17000,ket:""},
+{no:45,tgl:"2026-05-06",merchant:"Ongkos Kuliah",kategori:"Allowance",wallet:"Cash",jenis:"Income",nominal:40000,ket:""},
+{no:46,tgl:"2026-05-06",merchant:"Parkir",kategori:"Parkir",wallet:"Cash",jenis:"Expense",nominal:1000,ket:""},
+{no:47,tgl:"2026-05-06",merchant:"Bensin",kategori:"Bensin",wallet:"Cash",jenis:"Expense",nominal:34000,ket:""},
+{no:48,tgl:"2026-05-06",merchant:"You C1000",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:9200,ket:""},
+{no:49,tgl:"2026-05-06",merchant:"Fried Chicken",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:11500,ket:""},
+{no:50,tgl:"2026-05-07",merchant:"Gado-gado",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:18000,ket:""},
+{no:51,tgl:"2026-05-09",merchant:"Ongkos Kuliah",kategori:"Allowance",wallet:"Cash",jenis:"Income",nominal:40000,ket:""},
+{no:52,tgl:"2026-05-09",merchant:"Batagor",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:10000,ket:""},
+{no:53,tgl:"2026-05-09",merchant:"Parkir",kategori:"Parkir",wallet:"Cash",jenis:"Expense",nominal:2000,ket:""},
+{no:54,tgl:"2026-05-09",merchant:"Nasi Padang",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:10000,ket:""},
+{no:55,tgl:"2026-05-10",merchant:"Cukur",kategori:"Personal Care",wallet:"Cash",jenis:"Expense",nominal:20000,ket:""},
+{no:56,tgl:"2026-05-11",merchant:"Perfume Octarine",kategori:"Personal Care",wallet:"Blu",jenis:"Expense",nominal:56894,ket:""},
+{no:57,tgl:"2026-05-12",merchant:"Ongkos Kuliah",kategori:"Allowance",wallet:"Cash",jenis:"Income",nominal:40000,ket:""},
+{no:58,tgl:"2026-05-12",merchant:"Parkir",kategori:"Parkir",wallet:"Cash",jenis:"Expense",nominal:1000,ket:""},
+{no:59,tgl:"2026-05-12",merchant:"Cuci Motor",kategori:"Transport",wallet:"Cash",jenis:"Expense",nominal:15000,ket:""},
+{no:60,tgl:"2026-05-12",merchant:"Nasi Padang",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:10000,ket:""},
+{no:61,tgl:"2026-05-13",merchant:"Ongkos Kuliah",kategori:"Allowance",wallet:"Cash",jenis:"Income",nominal:40000,ket:""},
+{no:62,tgl:"2026-05-13",merchant:"Roti",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:10000,ket:""},
+{no:63,tgl:"2026-05-13",merchant:"Parkir",kategori:"Parkir",wallet:"Cash",jenis:"Expense",nominal:4000,ket:""},
+{no:64,tgl:"2026-05-13",merchant:"Kopi Kenangan",kategori:"Food & Beverage",wallet:"Blu",jenis:"Expense",nominal:33000,ket:""},
+{no:65,tgl:"2026-05-13",merchant:"Bensin",kategori:"Bensin",wallet:"Cash",jenis:"Expense",nominal:40000,ket:""},
+{no:66,tgl:"2026-05-13",merchant:"Mie Ayam Bakso",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:15000,ket:""},
+{no:67,tgl:"2026-05-13",merchant:"Body Wash",kategori:"Personal Care",wallet:"Blu",jenis:"Expense",nominal:31339,ket:""},
+{no:68,tgl:"2026-05-14",merchant:"Stik PC",kategori:"Shopping",wallet:"Blu",jenis:"Expense",nominal:46184,ket:""},
+{no:69,tgl:"2026-05-14",merchant:"Selisih",kategori:"Lainnya",wallet:"Cash",jenis:"Expense",nominal:900,ket:""},
+{no:70,tgl:"2026-05-14",merchant:"Print Modul Praktikum",kategori:"Education",wallet:"Blu",jenis:"Expense",nominal:20000,ket:""},
+{no:71,tgl:"2026-05-16",merchant:"Ongkos Kuliah",kategori:"Allowance",wallet:"Cash",jenis:"Income",nominal:40000,ket:""},
+{no:72,tgl:"2026-05-15",merchant:"Biaya Admin",kategori:"Admin Fee",wallet:"DKI",jenis:"Expense",nominal:5000,ket:""},
+{no:73,tgl:"2026-05-16",merchant:"Nasi Ayam Hisana",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:18000,ket:""},
+{no:74,tgl:"2026-05-16",merchant:"Parkir",kategori:"Parkir",wallet:"Cash",jenis:"Expense",nominal:2000,ket:""},
+{no:75,tgl:"2026-05-16",merchant:"Nasi Jukut Ayam Goreng + Air",kategori:"Food & Beverage",wallet:"Blu",jenis:"Expense",nominal:40000,ket:""},
+{no:76,tgl:"2026-05-16",merchant:"Parkir",kategori:"Parkir",wallet:"Cash",jenis:"Expense",nominal:5000,ket:""},
+{no:77,tgl:"2026-05-16",merchant:"Nasi Goreng",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:15000,ket:""},
+{no:78,tgl:"2026-05-17",merchant:"Paket Kuota 150 GB",kategori:"Bills & Utilities",wallet:"Blu",jenis:"Expense",nominal:150000,ket:""},
+{no:79,tgl:"2026-05-17",merchant:"Keychain Motor",kategori:"Shopping",wallet:"Blu",jenis:"Expense",nominal:12090,ket:""},
+{no:80,tgl:"2026-05-18",merchant:"Ongkos Kuliah",kategori:"Allowance",wallet:"Cash",jenis:"Income",nominal:40000,ket:""},
+{no:81,tgl:"2026-05-18",merchant:"Investment Return IPO WBSA",kategori:"Investment Return",wallet:"Blu",jenis:"Income",nominal:245000,ket:""},
+{no:82,tgl:"2026-05-18",merchant:"Bensin",kategori:"Bensin",wallet:"Cash",jenis:"Expense",nominal:30000,ket:""},
+{no:83,tgl:"2026-05-18",merchant:"Nasi Padang",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:10000,ket:""},
+{no:84,tgl:"2026-05-19",merchant:"Ongkos Kuliah",kategori:"Allowance",wallet:"Cash",jenis:"Income",nominal:40000,ket:""},
+{no:85,tgl:"2026-05-19",merchant:"Nasi Goreng",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:12000,ket:""},
+{no:86,tgl:"2026-05-19",merchant:"Parkir",kategori:"Parkir",wallet:"Cash",jenis:"Expense",nominal:4000,ket:""},
+{no:87,tgl:"2026-05-19",merchant:"Mie Ayam Bakso",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:15000,ket:""},
+{no:88,tgl:"2026-05-19",merchant:"Print Modul AKL 2",kategori:"Education",wallet:"Blu",jenis:"Expense",nominal:18000,ket:""},
+{no:89,tgl:"2026-05-19",merchant:"Biaya Admin Modul AKL 2",kategori:"Admin Fee",wallet:"Blu",jenis:"Expense",nominal:2000,ket:""},
+{no:90,tgl:"2026-05-19",merchant:"Top up Gopay",kategori:"Transfer",wallet:"Blu",jenis:"Expense",nominal:40000,ket:""},
+{no:91,tgl:"2026-05-19",merchant:"Top up Gopay",kategori:"Transfer",wallet:"GoPay",jenis:"Income",nominal:40000,ket:""},
+{no:92,tgl:"2026-05-19",merchant:"Subscribe Channel YB",kategori:"Shopping",wallet:"GoPay",jenis:"Expense",nominal:33189,ket:""},
+{no:93,tgl:"2026-05-20",merchant:"Ongkos Kuliah",kategori:"Allowance",wallet:"Cash",jenis:"Income",nominal:40000,ket:""},
+{no:94,tgl:"2026-05-20",merchant:"Nasi Goreng",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:12000,ket:""},
+{no:95,tgl:"2026-05-20",merchant:"Parkir",kategori:"Parkir",wallet:"Cash",jenis:"Expense",nominal:2000,ket:""},
+{no:96,tgl:"2026-05-20",merchant:"Nasi Padang",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:10000,ket:""},
+{no:97,tgl:"2026-05-20",merchant:"Buku Tulis Sidu",kategori:"Education",wallet:"Cash",jenis:"Expense",nominal:5000,ket:""},
+{no:98,tgl:"2026-05-20",merchant:"Bensin",kategori:"Bensin",wallet:"Cash",jenis:"Expense",nominal:20000,ket:""},
+{no:99,tgl:"2026-05-21",merchant:"Nasi Warteg",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:21000,ket:""},
+{no:100,tgl:"2026-05-21",merchant:"Ongkos Kuliah",kategori:"Allowance",wallet:"Cash",jenis:"Income",nominal:40000,ket:""},
+{no:101,tgl:"2026-05-21",merchant:"Duplikat Kunci Motor",kategori:"Transport",wallet:"Blu",jenis:"Expense",nominal:40000,ket:""},
+{no:102,tgl:"2026-05-21",merchant:"Mie Ayam",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:12000,ket:""},
+{no:103,tgl:"2026-05-24",merchant:"Case Samsung A13",kategori:"Shopping",wallet:"DKI",jenis:"Expense",nominal:18000,ket:""},
+{no:104,tgl:"2026-05-24",merchant:"Bensin",kategori:"Bensin",wallet:"Cash",jenis:"Income",nominal:25000,ket:""},
+{no:105,tgl:"2026-05-24",merchant:"Bensin",kategori:"Bensin",wallet:"Cash",jenis:"Expense",nominal:30000,ket:""},
+{no:106,tgl:"2026-05-25",merchant:"Gaji AsLab",kategori:"Salary",wallet:"DKI",jenis:"Income",nominal:698000,ket:""},
+{no:107,tgl:"2026-05-25",merchant:"DKI to Blu",kategori:"Transfer",wallet:"DKI",jenis:"Expense",nominal:600000,ket:""},
+{no:108,tgl:"2026-05-25",merchant:"DKI to Blu",kategori:"Transfer",wallet:"Blu",jenis:"Income",nominal:600000,ket:""},
+{no:109,tgl:"2026-05-25",merchant:"Admin Flip",kategori:"Admin Fee",wallet:"DKI",jenis:"Expense",nominal:325,ket:""},
+{no:110,tgl:"2026-05-25",merchant:"Cicil Sepatu Converse 500k",kategori:"Shopping",wallet:"Blu",jenis:"Expense",nominal:150000,ket:""},
+{no:111,tgl:"2026-05-25",merchant:"Perpanjang SIM C",kategori:"Transport",wallet:"Cash",jenis:"Income",nominal:200000,ket:""},
+{no:112,tgl:"2026-05-25",merchant:"Tes Psikologi",kategori:"Transport",wallet:"DKI",jenis:"Expense",nominal:77500,ket:""},
+{no:113,tgl:"2026-05-25",merchant:"Admin Fee",kategori:"Transport",wallet:"DKI",jenis:"Expense",nominal:6500,ket:""},
+{no:114,tgl:"2026-05-26",merchant:"Kertas Binder B5",kategori:"Education",wallet:"Blu",jenis:"Expense",nominal:20000,ket:""},
+{no:115,tgl:"2026-05-26",merchant:"Perpanjang SIM C",kategori:"Transport",wallet:"Blu",jenis:"Expense",nominal:109501,ket:""},
+{no:116,tgl:"2026-05-26",merchant:"Admin Fee Perpanjang SIM C",kategori:"Admin Fee",wallet:"Blu",jenis:"Expense",nominal:6500,ket:""},
+{no:117,tgl:"2026-05-27",merchant:"Amal",kategori:"Lainnya",wallet:"Cash",jenis:"Expense",nominal:2000,ket:""},
+{no:118,tgl:"2026-05-27",merchant:"Perfume Octarine",kategori:"Shopping",wallet:"Blu",jenis:"Expense",nominal:28783,ket:""},
+{no:119,tgl:"2026-05-28",merchant:"Gopay",kategori:"Investment Return",wallet:"GoPay",jenis:"Income",nominal:383,ket:""},
+{no:120,tgl:"2026-05-29",merchant:"Ongkos Kuliah",kategori:"Allowance",wallet:"Cash",jenis:"Income",nominal:40000,ket:""},
+{no:121,tgl:"2026-05-29",merchant:"Cilok",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:10000,ket:""},
+{no:122,tgl:"2026-05-29",merchant:"Parkir",kategori:"Parkir",wallet:"Cash",jenis:"Expense",nominal:1000,ket:""},
+{no:123,tgl:"2026-05-29",merchant:"Nitip Roti Bakar",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:6000,ket:""},
+{no:124,tgl:"2026-05-29",merchant:"Ganti Oli",kategori:"Transport",wallet:"Cash",jenis:"Income",nominal:95000,ket:""},
+{no:125,tgl:"2026-05-29",merchant:"Ganti Oli + Klakson motor + Jasa",kategori:"Transport",wallet:"Cash",jenis:"Expense",nominal:200000,ket:"95k+95k+10k"},
+{no:126,tgl:"2026-05-29",merchant:"Parkir Masjid",kategori:"Parkir",wallet:"Cash",jenis:"Expense",nominal:2000,ket:""},
+{no:127,tgl:"2026-05-29",merchant:"Nasi Padang",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:10000,ket:""},
+{no:128,tgl:"2026-05-30",merchant:"Pengembalian dana perpanjang sim",kategori:"Transport",wallet:"Blu",jenis:"Income",nominal:93001,ket:""},
+{no:129,tgl:"2026-05-30",merchant:"Perpanjang Sim C",kategori:"Transport",wallet:"Blu",jenis:"Expense",nominal:107501,ket:""},
+{no:130,tgl:"2026-05-30",merchant:"Admin Fee",kategori:"Admin Fee",wallet:"Blu",jenis:"Expense",nominal:6500,ket:""},
+{no:131,tgl:"2026-06-01",merchant:"Shampoo Tresemme + Gillete",kategori:"Personal Care",wallet:"Blu",jenis:"Expense",nominal:44957,ket:""},
+{no:132,tgl:"2026-06-01",merchant:"Bensin",kategori:"Bensin",wallet:"Cash",jenis:"Income",nominal:15000,ket:""},
+{no:133,tgl:"2026-06-01",merchant:"Bensin",kategori:"Bensin",wallet:"Cash",jenis:"Expense",nominal:38000,ket:""},
+{no:134,tgl:"2026-06-01",merchant:"Isi Angin Ban Motor",kategori:"Transport",wallet:"Cash",jenis:"Expense",nominal:2000,ket:""},
+{no:135,tgl:"2026-06-02",merchant:"Ongkos Kuliah",kategori:"Allowance",wallet:"Cash",jenis:"Income",nominal:40000,ket:""},
+{no:136,tgl:"2026-06-02",merchant:"Ganti Pentil Ban Tubeles",kategori:"Transport",wallet:"Cash",jenis:"Expense",nominal:20000,ket:""},
+{no:137,tgl:"2026-06-02",merchant:"Parkir",kategori:"Parkir",wallet:"Cash",jenis:"Expense",nominal:3000,ket:""},
+{no:138,tgl:"2026-06-02",merchant:"You.C1000 Lemon Water",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:9200,ket:""},
+{no:139,tgl:"2026-06-02",merchant:"Nasi Padang",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:10000,ket:""},
+{no:140,tgl:"2026-06-03",merchant:"Ongkos Kuliah",kategori:"Allowance",wallet:"Cash",jenis:"Income",nominal:40000,ket:""},
+{no:141,tgl:"2026-06-03",merchant:"Parkir",kategori:"Parkir",wallet:"Cash",jenis:"Expense",nominal:3000,ket:""},
+{no:142,tgl:"2026-06-03",merchant:"Nasi Padang",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:10000,ket:""},
+{no:143,tgl:"2026-06-03",merchant:"Print Laporan Akhir Sains Data",kategori:"Education",wallet:"Cash",jenis:"Expense",nominal:15000,ket:""},
+{no:144,tgl:"2026-06-04",merchant:"Ongkos Kuliah",kategori:"Allowance",wallet:"Cash",jenis:"Income",nominal:40000,ket:""},
+{no:145,tgl:"2026-06-04",merchant:"Parkir",kategori:"Parkir",wallet:"Cash",jenis:"Expense",nominal:2000,ket:""},
+{no:146,tgl:"2026-06-04",merchant:"Nasi Padang",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:10000,ket:""},
+{no:147,tgl:"2026-06-04",merchant:"Print Tugas HKAP + Cover Jilid",kategori:"Education",wallet:"Cash",jenis:"Expense",nominal:18000,ket:""},
+{no:148,tgl:"2026-06-04",merchant:"Parkir Univ",kategori:"Parkir",wallet:"Cash",jenis:"Expense",nominal:5000,ket:""},
+{no:149,tgl:"2026-06-04",merchant:"You C1000",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:9200,ket:""},
+{no:150,tgl:"2026-06-05",merchant:"Ongkos Kuliah",kategori:"Allowance",wallet:"Cash",jenis:"Income",nominal:40000,ket:""},
+{no:151,tgl:"2026-06-05",merchant:"Bensin",kategori:"Bensin",wallet:"Cash",jenis:"Expense",nominal:38000,ket:""},
+{no:152,tgl:"2026-06-05",merchant:"Parkir",kategori:"Parkir",wallet:"Cash",jenis:"Expense",nominal:2000,ket:""},
+{no:153,tgl:"2026-06-05",merchant:"Nasi Padang",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:10000,ket:""},
+{no:154,tgl:"2026-06-06",merchant:"Gaji AsLab",kategori:"Salary",wallet:"DKI",jenis:"Income",nominal:172000,ket:""},
+{no:155,tgl:"2026-06-06",merchant:"DKI to Blu",kategori:"Transfer",wallet:"DKI",jenis:"Expense",nominal:172000,ket:""},
+{no:156,tgl:"2026-06-06",merchant:"DKI to Blu",kategori:"Transfer",wallet:"Blu",jenis:"Income",nominal:172000,ket:""},
+{no:157,tgl:"2026-06-07",merchant:"Parkir",kategori:"Parkir",wallet:"Cash",jenis:"Expense",nominal:3000,ket:""},
+{no:158,tgl:"2026-06-07",merchant:"Nasi Padang",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:10000,ket:""},
+{no:159,tgl:"2026-06-07",merchant:"Cicil Sepatu Converse 500k",kategori:"Shopping",wallet:"Blu",jenis:"Expense",nominal:150000,ket:""},
+{no:160,tgl:"2026-06-07",merchant:"Cicil Sepatu Converse 500k",kategori:"Shopping",wallet:"Blu",jenis:"Expense",nominal:200000,ket:"sisa 100k lagi"},
+{no:161,tgl:"2026-06-08",merchant:"Parkir",kategori:"Parkir",wallet:"Cash",jenis:"Expense",nominal:3000,ket:""},
+{no:162,tgl:"2026-06-08",merchant:"Nasi Padang",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:10000,ket:""},
+{no:163,tgl:"2026-06-08",merchant:"Bensin",kategori:"Bensin",wallet:"Cash",jenis:"Expense",nominal:38000,ket:""},
+{no:164,tgl:"2026-06-08",merchant:"Oli Gardan Motor Matic",kategori:"Transport",wallet:"Blu",jenis:"Expense",nominal:65000,ket:""},
+{no:165,tgl:"2026-06-09",merchant:"Ongkos Kuliah",kategori:"Allowance",wallet:"Cash",jenis:"Income",nominal:40000,ket:""},
+{no:166,tgl:"2026-06-09",merchant:"Parkir",kategori:"Parkir",wallet:"Cash",jenis:"Expense",nominal:3000,ket:""},
+{no:167,tgl:"2026-06-09",merchant:"Nasi Padang",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:10000,ket:""},
+{no:168,tgl:"2026-06-09",merchant:"Roti",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:10000,ket:""},
+{no:169,tgl:"2026-06-09",merchant:"Print Laporan Sains Data",kategori:"Education",wallet:"Cash",jenis:"Expense",nominal:10000,ket:""},
+{no:170,tgl:"2026-06-10",merchant:"Ongkos Kuliah",kategori:"Allowance",wallet:"Cash",jenis:"Income",nominal:40000,ket:""},
+{no:171,tgl:"2026-06-10",merchant:"Nasi Padang",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:10000,ket:""},
+{no:172,tgl:"2026-06-10",merchant:"Parkir",kategori:"Parkir",wallet:"Cash",jenis:"Expense",nominal:3000,ket:""},
+{no:173,tgl:"2026-06-11",merchant:"Parkir",kategori:"Parkir",wallet:"Cash",jenis:"Expense",nominal:3000,ket:""},
+{no:174,tgl:"2026-06-11",merchant:"Nasi Padang",kategori:"Food & Beverage",wallet:"Cash",jenis:"Expense",nominal:10000,ket:""},
+{no:175,tgl:"2026-06-11",merchant:"Bensin",kategori:"Bensin",wallet:"Cash",jenis:"Expense",nominal:38000,ket:""},
+{no:176,tgl:"2026-06-12",merchant:"Ojol",kategori:"Transport",wallet:"GoPay",jenis:"Expense",nominal:33000,ket:""}
+];
+
+let txList = [...TX_BASE];
+let newTxNo = 177;
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbw1pnD71V9c31QxIV0ZYtMIWCyiUyMGvfDXX9WVT5p0z1sGBkGY53R8Bj826cfRux6ifg/exec';
+let curJenis = 'Expense';
+let budgetMonth = '2026-06';
+const charts = {};
+
+const BUDGETS = {
+  'Food & Beverage': 400000,
+  'Transport': 300000,
+  'Bensin': 200000,
+  'Personal Care': 150000,
+  'Shopping': 200000,
+  'Education': 100000,
+  'Bills & Utilities': 200000,
+  'Parkir': 50000,
+};
+
+const WALLET_COLORS = {
+  Cash: '#1D9E75', Blu: '#3B82F6', DKI: '#8B5CF6', GoPay: '#EF9F27', Jago: '#94A3B8'
+};
+
+const CHART_COLORS = ['#10B981','#3B82F6','#8B5CF6','#F59E0B','#EF4444','#06B6D4','#EC4899','#F97316','#14B8A6','#6366F1'];
+
+const KAT_EXPENSE = ['Food & Beverage','Transport','Bensin','Personal Care','Shopping','Education','Bills & Utilities','Parkir','Household','Admin Fee','Lainnya'];
+const KAT_INCOME  = ['Allowance','Salary','Reimburse','Investment Return','Lainnya'];
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function fmt(n) { return n.toLocaleString('id-ID'); }
+function fmtShort(n) {
+  if(n>=1000000) return (n/1000000).toFixed(1)+'jt';
+  if(n>=1000) return (n/1000).toFixed(0)+'rb';
+  return n.toString();
+}
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 2500);
+}
+
+function setDate() {
+  const now = new Date();
+  const opts = { weekday:'long', day:'numeric', month:'long', year:'numeric' };
+  const full = now.toLocaleDateString('id-ID', opts);
+  document.getElementById('sidebarDate').textContent = full;
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
+function goPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  // sidebar
+  document.querySelectorAll('.nav-item').forEach(b=>{
+    b.classList.toggle('active', b.getAttribute('onclick')?.includes("'"+id+"'"));
+  });
+  // bottom nav
+  document.querySelectorAll('.bnav-item').forEach(b=>{
+    b.classList.toggle('active', b.getAttribute('onclick')?.includes("'"+id+"'"));
+  });
+  if(id==='transaksi') { renderTx(); }
+  if(id==='budgeting') { renderBudget(); }
+  if(id==='grafik') { renderCharts(); }
+  if(id==='input') { renderTodayList(); updateMiniKpi(); }
+  if(id==='dashboard') { renderDash(); }
+  window.scrollTo(0,0);
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+function renderDash() {
+  const last10 = txList.slice(-10).reverse();
+  document.getElementById('last10Body').innerHTML = last10.map(t=>`
+    <tr>
+      <td style="color:var(--text-muted);white-space:nowrap;font-variant-numeric:tabular-nums">${t.tgl.slice(5)}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500">${t.merchant}</td>
+      <td style="color:var(--text-muted);white-space:nowrap">${t.kategori}</td>
+      <td style="white-space:nowrap">${t.wallet}</td>
+      <td style="text-align:right;white-space:nowrap;font-weight:700;font-variant-numeric:tabular-nums;color:${t.jenis==='Expense'?'var(--red-dark)':'var(--teal-dark)'}">
+        ${t.jenis==='Expense'?'- ':'+ '}Rp ${fmt(t.nominal)}
+      </td>
+    </tr>`).join('');
+  document.getElementById('dashTxCount').textContent = txList.length;
+}
+
+// ── INPUT ─────────────────────────────────────────────────────────────────────
+function initInput() {
+  document.getElementById('fTgl').value = todayStr();
+  setJenis('Expense');
+}
+
+function setJenis(j) {
+  curJenis = j;
+  document.getElementById('btnExp').className = 'jenis-btn' + (j==='Expense'?' active-exp':'');
+  document.getElementById('btnInc').className = 'jenis-btn' + (j==='Income'?' active-inc':'');
+  document.getElementById('btnTf').className  = 'jenis-btn' + (j==='Transfer'?' active-tf':'');
+  const sel = document.getElementById('fKat');
+  sel.innerHTML = '';
+  (j==='Transfer'?['Transfer']:j==='Income'?KAT_INCOME:KAT_EXPENSE).forEach(k=>{
+    const o = document.createElement('option');
+    o.textContent = k;
+    sel.appendChild(o);
+  });
+  document.getElementById('walletToWrap').style.display = j==='Transfer'?'':'none';
+  const note = document.getElementById('transferNote');
+  note.classList.toggle('show', j==='Transfer');
+}
+
+async function tambahTx() {
+  const tgl = document.getElementById('fTgl').value;
+  const merchant = document.getElementById('fMerchant').value.trim();
+  const kat = document.getElementById('fKat').value;
+  const wallet = document.getElementById('fWallet').value;
+  const walletTo = document.getElementById('fWalletTo').value;
+  const nominal = parseFloat(document.getElementById('fNominal').value)||0;
+  const ket = document.getElementById('fKet').value.trim();
+
+  if(!tgl) { toast('⚠️ Isi tanggal dulu!'); return; }
+  if(!merchant) { toast('⚠️ Isi nama merchant!'); return; }
+  if(nominal<=0) { toast('⚠️ Nominal harus lebih dari 0!'); return; }
+
+  const kirimKeSheets = async (tx) => {
+    try {
+      await fetch(SHEETS_URL, {
+        method: 'POST',
+        body: JSON.stringify(tx),
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } catch(err) {
+      console.warn('Sheets sync gagal:', err);
+    }
+  };
+
+  if(curJenis === 'Transfer') {
+    const tx1 = {no:newTxNo++,tgl,merchant,kategori:'Transfer',wallet,jenis:'Expense',nominal,ket};
+    const tx2 = {no:newTxNo++,tgl,merchant,kategori:'Transfer',wallet:walletTo,jenis:'Income',nominal,ket};
+    txList.push(tx1);
+    txList.push(tx2);
+    toast('🔄 Menyimpan ke Sheets...');
+    await kirimKeSheets(tx1);
+    await kirimKeSheets(tx2);
+    toast('✅ Transfer dicatat + tersimpan di Sheets!');
+  } else {
+    const tx = {no:newTxNo++,tgl,merchant,kategori:kat,wallet,jenis:curJenis,nominal,ket};
+    txList.push(tx);
+    toast('🔄 Menyimpan ke Sheets...');
+    await kirimKeSheets(tx);
+    toast('✅ Transaksi dicatat + tersimpan di Sheets!');
+  }
+
+  document.getElementById('fMerchant').value = '';
+  document.getElementById('fNominal').value = '';
+  document.getElementById('fKet').value = '';
+  renderTodayList();
+  updateMiniKpi();
+}
+
+function hapusTx(no) {
+  txList = txList.filter(t=>t.no!==no);
+  renderTodayList();
+  updateMiniKpi();
+  toast('🗑 Transaksi dihapus');
+}
+
+function renderTodayList() {
+  const today = todayStr();
+  const todayTx = txList.filter(t=>t.tgl===today).slice().reverse();
+  const countEl = document.getElementById('todayCount');
+  countEl.textContent = todayTx.length + ' transaksi';
+  if(!todayTx.length) {
+    document.getElementById('todayList').innerHTML = `
+      <div class="today-empty">
+        <div class="today-empty-icon">📋</div>
+        <div class="today-empty-text">Belum ada transaksi hari ini.<br>Tambah di atas!</div>
+      </div>`;
+    return;
+  }
+  document.getElementById('todayList').innerHTML = todayTx.map(t=>`
+    <div class="today-item">
+      <div class="today-left">
+        <div class="today-type-dot" style="background:${t.jenis==='Expense'?'var(--red)':'var(--teal)'}"></div>
+        <div>
+          <div class="today-merchant">${t.merchant}</div>
+          <div class="today-meta">${t.kategori} · ${t.wallet}${t.ket?' · '+t.ket:''}</div>
+        </div>
+      </div>
+      <div class="today-right">
+        <div class="today-nominal ${t.jenis==='Expense'?'exp':'inc'}">${t.jenis==='Expense'?'−':'+'} Rp ${fmt(t.nominal)}</div>
+        <button class="btn-del" onclick="hapusTx(${t.no})" title="Hapus">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>`).join('');
+}
+
+function updateMiniKpi() {
+  const today = todayStr();
+  const td = txList.filter(t=>t.tgl===today);
+  const inc = td.filter(t=>t.jenis==='Income').reduce((s,t)=>s+t.nominal,0);
+  const exp = td.filter(t=>t.jenis==='Expense').reduce((s,t)=>s+t.nominal,0);
+  const net = inc - exp;
+  document.getElementById('todayInc').textContent = 'Rp '+fmt(inc);
+  document.getElementById('todayExp').textContent = 'Rp '+fmt(exp);
+  const el = document.getElementById('todayNet');
+  el.textContent = (net<0?'−':'+')+'Rp '+fmt(Math.abs(net));
+  el.style.color = net<0?'var(--red-dark)':net>0?'var(--teal-dark)':'var(--text)';
+}
+
+function exportTx() {
+  const newOnly = txList.filter(t=>t.no>=177);
+  if(!newOnly.length) { toast('⚠️ Belum ada transaksi baru!'); return; }
+  const header = 'No\tTanggal\tMerchant\tKategori\tWallet\tJenis\tNominal\tKeterangan';
+  const rows = newOnly.map(t=>`${t.no}\t${t.tgl}\t${t.merchant}\t${t.kategori}\t${t.wallet}\t${t.jenis}\t${t.nominal}\t${t.ket}`).join('\n');
+  navigator.clipboard.writeText(header+'\n'+rows)
+    .then(()=>toast('📋 Disalin! Paste ke Excel.'))
+    .catch(()=>toast('Gunakan Ctrl+C setelah memilih teks'));
+}
+
+// ── FILTER KATEGORI ───────────────────────────────────────────────────────────
+function initKatFilter() {
+  const sel = document.getElementById('filterKat');
+  const all = [...new Set(txList.map(t=>t.kategori))].sort();
+  all.forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=k;sel.appendChild(o)});
+}
+
+// ── RIWAYAT TRANSAKSI ─────────────────────────────────────────────────────────
+function renderTx() {
+  const bulan  = document.getElementById('filterBulan').value;
+  const jenis  = document.getElementById('filterJenis').value;
+  const wallet = document.getElementById('filterWallet').value;
+  const kat    = document.getElementById('filterKat').value;
+  const search = document.getElementById('filterSearch').value.toLowerCase();
+  let data = txList.slice().reverse();
+  if(bulan)  data=data.filter(t=>t.tgl.startsWith(bulan));
+  if(jenis)  data=data.filter(t=>t.jenis===jenis);
+  if(wallet) data=data.filter(t=>t.wallet===wallet);
+  if(kat)    data=data.filter(t=>t.kategori===kat);
+  if(search) data=data.filter(t=>t.merchant.toLowerCase().includes(search));
+  document.getElementById('txBody').innerHTML = data.map(t=>`
+    <tr>
+      <td style="white-space:nowrap;color:var(--text-muted);font-variant-numeric:tabular-nums">${t.tgl.slice(5)}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500">${t.merchant}</td>
+      <td style="color:var(--text-muted)">${t.kategori}</td>
+      <td>${t.wallet}</td>
+      <td><span class="badge badge-${t.jenis==='Expense'?'exp':'inc'}">${t.jenis}</span></td>
+      <td style="text-align:right;white-space:nowrap;font-weight:700;font-variant-numeric:tabular-nums;color:${t.jenis==='Expense'?'var(--red-dark)':'var(--teal-dark)'}">
+        ${t.jenis==='Expense'?'−':'+'}Rp ${fmt(t.nominal)}
+      </td>
+    </tr>`).join('');
+  const exp=data.filter(t=>t.jenis==='Expense').reduce((s,t)=>s+t.nominal,0);
+  const inc=data.filter(t=>t.jenis==='Income').reduce((s,t)=>s+t.nominal,0);
+  document.getElementById('txSummary').innerHTML =
+    `<span>${data.length} transaksi</span><span>📤 Pengeluaran: <strong>Rp ${fmt(exp)}</strong></span><span>📥 Pemasukan: <strong>Rp ${fmt(inc)}</strong></span>`;
+}
+
+// ── BUDGETING ─────────────────────────────────────────────────────────────────
+function setBudgetMonth(m) {
+  budgetMonth = m;
+  document.querySelectorAll('.month-tab').forEach(b=>{
+    const map={'Semua':'','Apr 2026':'2026-04','Mei 2026':'2026-05','Jun 2026':'2026-06'};
+    b.classList.toggle('active', map[b.textContent.trim()]===m);
+  });
+  renderBudget();
+}
+
+function renderBudget() {
+  const f = budgetMonth ? txList.filter(t=>t.tgl.startsWith(budgetMonth)) : txList;
+  const exp = f.filter(t=>t.jenis==='Expense'&&t.kategori!=='Transfer');
+  const inc = f.filter(t=>t.jenis==='Income'&&t.kategori!=='Transfer');
+  const byKat = {};
+  exp.forEach(t=>{byKat[t.kategori]=(byKat[t.kategori]||0)+t.nominal});
+
+  document.getElementById('budgetRows').innerHTML = Object.entries(BUDGETS).map(([k,b])=>{
+    const real=byKat[k]||0, pct=b>0?real/b:0;
+    const bar=Math.min(pct,1)*100;
+    let col,status,cls;
+    if(pct>1){col='var(--red)';status='Over!';cls='s-over'}
+    else if(pct>0.85){col='var(--amber)';status='Mepet';cls='s-warn'}
+    else{col='var(--teal)';status='Aman';cls='s-ok'}
+    return `<div class="budget-item">
+      <div class="budget-label">${k}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${bar}%;background:${col}"></div></div>
+      <div class="budget-pct">${Math.round(pct*100)}%</div>
+      <span class="budget-status ${cls}">${status}</span>
+    </div>`;
+  }).join('');
+
+  const totExp=exp.reduce((s,t)=>s+t.nominal,0);
+  const totInc=inc.reduce((s,t)=>s+t.nominal,0);
+  const net=totInc-totExp;
+  document.getElementById('budgetSummary').innerHTML=`
+    <div class="sum-row"><div class="sum-label">Total Pemasukan</div><div style="color:var(--teal-dark);font-weight:700">Rp ${fmt(totInc)}</div></div>
+    <div class="sum-row"><div class="sum-label">Total Pengeluaran</div><div style="color:var(--red-dark);font-weight:700">Rp ${fmt(totExp)}</div></div>
+    <div class="sum-row"><div class="sum-label">Net Cash Flow</div><div style="color:${net<0?'var(--red-dark)':'var(--teal-dark)'};font-weight:800;font-size:16px">Rp ${fmt(net)}</div></div>`;
+
+  const walletExp={};
+  exp.forEach(t=>{walletExp[t.wallet]=(walletExp[t.wallet]||0)+t.nominal});
+  document.getElementById('walletSummary').innerHTML = Object.entries(walletExp).sort((a,b)=>b[1]-a[1]).map(([w,v])=>`
+    <div class="sum-row">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:8px;height:8px;border-radius:50%;background:${WALLET_COLORS[w]||'#888'}"></div>
+        <div class="sum-label">${w}</div>
+      </div>
+      <div style="font-weight:600">Rp ${fmt(v)}</div>
+    </div>`).join('');
+}
+
+// ── GRAFIK ────────────────────────────────────────────────────────────────────
+function renderCharts() {
+  const jun = txList.filter(t=>t.tgl.startsWith('2026-06')&&t.jenis==='Expense'&&t.kategori!=='Transfer');
+  const byKat={};
+  jun.forEach(t=>{byKat[t.kategori]=(byKat[t.kategori]||0)+t.nominal});
+  const katE=Object.entries(byKat).sort((a,b)=>b[1]-a[1]);
+
+  if(charts.kat) charts.kat.destroy();
+  charts.kat = new Chart(document.getElementById('chartKat'),{
+    type:'bar',
+    data:{labels:katE.map(e=>e[0]),datasets:[{label:'Pengeluaran',data:katE.map(e=>e[1]),backgroundColor:katE.map((_,i)=>CHART_COLORS[i%CHART_COLORS.length]),borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:11},maxRotation:35}},y:{ticks:{callback:v=>'Rp '+fmtShort(v)}}}}
+  });
+
+  const wallets=['Cash','Blu','DKI','GoPay','Jago'];
+  const wVals=wallets.map(w=>txList.filter(t=>t.wallet===w&&t.jenis==='Expense'&&t.kategori!=='Transfer').reduce((s,t)=>s+t.nominal,0));
+  if(charts.doughnut) charts.doughnut.destroy();
+  
+  // Mengambil warna border dinamis menyesuaikan tema (terang/gelap)
+  const surfaceColor = getComputedStyle(document.documentElement).getPropertyValue('--surface').trim() || '#FFFFFF';
+
+  charts.doughnut = new Chart(document.getElementById('chartDoughnut'),{
+    type:'doughnut',
+    data:{labels:wallets,datasets:[{data:wVals,backgroundColor:wallets.map(w=>WALLET_COLORS[w]),borderWidth:3,borderColor:surfaceColor}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{font:{size:12},padding:14}}}}
+  });
+
+  const months=['2026-04','2026-05','2026-06'];
+  const mLabels=['April','Mei','Juni'];
+  const mInc=months.map(m=>txList.filter(t=>t.tgl.startsWith(m)&&t.jenis==='Income'&&t.kategori!=='Transfer').reduce((s,t)=>s+t.nominal,0));
+  const mExp=months.map(m=>txList.filter(t=>t.tgl.startsWith(m)&&t.jenis==='Expense'&&t.kategori!=='Transfer').reduce((s,t)=>s+t.nominal,0));
+  if(charts.bulan) charts.bulan.destroy();
+  charts.bulan = new Chart(document.getElementById('chartBulan'),{
+    type:'bar',
+    data:{labels:mLabels,datasets:[
+      {label:'Pemasukan',data:mInc,backgroundColor:'#10B981',borderRadius:6},
+      {label:'Pengeluaran',data:mExp,backgroundColor:'#EF4444',borderRadius:6}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:12}}}},scales:{y:{ticks:{callback:v=>'Rp '+fmtShort(v)}}}}
+  });
+
+  const mNet=months.map((m,i)=>mInc[i]-mExp[i]);
+  let ytd=0;
+  const ytdVals=mNet.map(n=>(ytd+=n,ytd));
+  if(charts.ytd) charts.ytd.destroy();
+  charts.ytd = new Chart(document.getElementById('chartYtd'),{
+    type:'line',
+    data:{labels:mLabels,datasets:[{label:'Net YTD',data:ytdVals,borderColor:'#3B82F6',backgroundColor:'rgba(59,130,246,0.1)',fill:true,tension:.4,pointRadius:6,pointBackgroundColor:'#3B82F6',pointBorderColor:surfaceColor,pointBorderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'Rp '+fmtShort(v)}}}}
+  });
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+initTheme(); // Set tema saat pertama kali load
+setDate();
+renderDash();
+initInput();
+initKatFilter();
+renderTodayList();
+updateMiniKpi();
+</script>
+</body>
+</html>
